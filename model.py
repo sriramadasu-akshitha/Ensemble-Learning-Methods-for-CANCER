@@ -1,5 +1,5 @@
 """
-Connects `index.html` to a Python backend.
+Connects `frontend.html` to a Python backend.
 
 Run:
   python model.py
@@ -137,7 +137,7 @@ predictor = EnsemblePredictor()
 @app.get("/")
 def index():
     # Serve the static frontend file from the project root
-    return send_from_directory(str(APP_DIR), "index.html")
+    return send_from_directory(str(APP_DIR), "frontend.html")
 
 
 @app.post("/predict")
