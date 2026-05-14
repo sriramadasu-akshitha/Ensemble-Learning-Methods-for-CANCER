@@ -6,7 +6,7 @@ app = Flask(__name__)
 @app.route("/")
 def home():
 
-    return send_from_directory(".", "frontend.html")
+    return send_from_directory(".", "index.html")
 
 
 @app.route("/predict", methods=["POST"])
