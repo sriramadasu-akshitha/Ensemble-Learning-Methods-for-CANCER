@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
+
 <title>AI Disease Detection</title>
 
 <style>
+
 body {
     font-family: Arial, sans-serif;
     background: linear-gradient(to right, #0f172a, #1e293b);
@@ -75,7 +79,9 @@ img {
     background: #22c55e;
     width: 0%;
 }
+
 </style>
+
 </head>
 
 <body>
@@ -84,81 +90,168 @@ img {
 
 <div class="card">
 
-    <input type="file" id="imageInput" accept="image/*">
-
-    <button onclick="previewImage()">Preview Image</button>
-
-    <img id="preview" />
+    <input
+        type="file"
+        id="imageInput"
+        accept="image/*"
+    >
 
     <br>
 
-    <button onclick="predict()">Predict Disease</button>
+    <button onclick="previewImage()">
+        Preview Image
+    </button>
 
-    <div id="loader">⏳ Predicting...</div>
+    <img id="preview">
 
-    <div class="result-box" id="resultBox" style="display:none;">
+    <br><br>
+
+    <button onclick="predict()">
+        Predict Disease
+    </button>
+
+    <div id="loader">
+        ⏳ Predicting...
+    </div>
+
+    <div
+        class="result-box"
+        id="resultBox"
+        style="display:none;"
+    >
+
         <h3 id="resultText"></h3>
 
         <div class="bar">
-            <div class="bar-fill" id="barFill"></div>
+            <div
+                class="bar-fill"
+                id="barFill"
+            ></div>
         </div>
 
         <p id="confidenceText"></p>
+
     </div>
 
 </div>
 
 <script>
+
 function previewImage() {
-    let file = document.getElementById("imageInput").files[0];
-    let reader = new FileReader();
+
+    const file =
+        document.getElementById("imageInput").files[0];
+
+    if (!file) {
+
+        alert("Please choose an image.");
+
+        return;
+    }
+
+    const reader = new FileReader();
 
     reader.onload = function(e) {
-        document.getElementById("preview").src = e.target.result;
-    }
+
+        document.getElementById("preview").src =
+            e.target.result;
+    };
 
     reader.readAsDataURL(file);
 }
 
+
 async function predict() {
-    const fileInput = document.getElementById("imageInput");
-    const file = fileInput.files && fileInput.files[0];
+
+    const fileInput =
+        document.getElementById("imageInput");
+
+    const file = fileInput.files[0];
 
     if (!file) {
+
         alert("Please choose an image first.");
+
         return;
     }
 
-    document.getElementById("resultBox").style.display = "none";
-    document.getElementById("loader").style.display = "block";
+    document.getElementById("loader").style.display =
+        "block";
+
+    document.getElementById("resultBox").style.display =
+        "none";
 
     try {
+
         const formData = new FormData();
+
         formData.append("image", file);
 
-        const res = await fetch("/predict", {
+        const response = await fetch("/predict", {
+
             method: "POST",
+
             body: formData
+
         });
 
-        const data = await res.json();
-        if (!res.ok) {
-            throw new Error(data && data.error ? data.error : "Prediction failed");
+        const contentType =
+            response.headers.get("content-type");
+
+        if (
+            !contentType ||
+            !contentType.includes("application/json")
+        ) {
+
+            const text = await response.text();
+
+            console.error(text);
+
+            throw new Error(
+                "Server returned HTML instead of JSON"
+            );
         }
 
-        const percent = Number(data.confidence_percent).toFixed(2);
+        const data = await response.json();
 
-        document.getElementById("resultBox").style.display = "block";
+        if (!response.ok) {
+
+            throw new Error(
+                data.error || "Prediction failed"
+            );
+        }
+
+        const percent =
+            Number(data.confidence_percent).toFixed(2);
+
+        document.getElementById("resultBox").style.display =
+            "block";
+
         document.getElementById("resultText").innerHTML =
-            (data.label === "Disease Detected" ? "Disease Detected ❌" : "Normal ✅");
+            data.label === "Disease Detected"
+            ? "Disease Detected ❌"
+            : "Normal ✅";
 
-        document.getElementById("barFill").style.width = percent + "%";
-    } catch (err) {
-        alert(err && err.message ? err.message : "Prediction failed");
-    } finally {
-        document.getElementById("loader").style.display = "none";
+        document.getElementById("confidenceText").innerHTML =
+            "Confidence: " + percent + "%";
+
+        document.getElementById("barFill").style.width =
+            percent + "%";
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        alert(error.message);
+    }
+    finally {
+
+        document.getElementById("loader").style.display =
+            "none";
     }
 }
+
 </script>
 
 </body>
