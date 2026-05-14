@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Disease Detection</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #0f172a, #1e293b);
+    color: white;
+    text-align: center;
+    padding: 30px;
+}
+
+.card {
+    background: #111827;
+    padding: 25px;
+    border-radius: 15px;
+    width: 420px;
+    margin: auto;
+    box-shadow: 0 0 20px black;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+input {
+    margin: 15px 0;
+}
+
+button {
+    background: #22c55e;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #16a34a;
+}
+
+img {
+    width: 100%;
+    margin-top: 15px;
+    border-radius: 10px;
+}
+
+#loader {
+    display: none;
+    margin-top: 15px;
+}
+
+.result-box {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    background: #1f2937;
+}
+
+.bar {
+    width: 100%;
+    background: #374151;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.bar-fill {
+    height: 10px;
+    background: #22c55e;
+    width: 0%;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🩺 Ensemble Learning Methods for CANCER</h1>
+
+<div class="card">
+
+    <input type="file" id="imageInput" accept="image/*">
+
+    <button onclick="previewImage()">Preview Image</button>
+
+    <img id="preview" />
+
+    <br>
+
+    <button onclick="predict()">Predict Disease</button>
+
+    <div id="loader">⏳ Predicting...</div>
+
+    <div class="result-box" id="resultBox" style="display:none;">
+        <h3 id="resultText"></h3>
+
+        <div class="bar">
+            <div class="bar-fill" id="barFill"></div>
+        </div>
+
+        <p id="confidenceText"></p>
+    </div>
+
+</div>
+
+<script>
+function previewImage() {
+    let file = document.getElementById("imageInput").files[0];
+    let reader = new FileReader();
+
+    reader.onload = function(e) {
+        document.getElementById("preview").src = e.target.result;
+    }
+
+    reader.readAsDataURL(file);
+}
+
+async function predict() {
+    const fileInput = document.getElementById("imageInput");
+    const file = fileInput.files && fileInput.files[0];
+
+    if (!file) {
+        alert("Please choose an image first.");
+        return;
+    }
+
+    document.getElementById("resultBox").style.display = "none";
+    document.getElementById("loader").style.display = "block";
+
+    try {
+        const formData = new FormData();
+        formData.append("image", file);
+
+        const res = await fetch("/predict", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data && data.error ? data.error : "Prediction failed");
+        }
+
+        const percent = Number(data.confidence_percent).toFixed(2);
+
+        document.getElementById("resultBox").style.display = "block";
+        document.getElementById("resultText").innerHTML =
+            (data.label === "Disease Detected" ? "Disease Detected ❌" : "Normal ✅");
+
+        document.getElementById("barFill").style.width = percent + "%";
+    } catch (err) {
+        alert(err && err.message ? err.message : "Prediction failed");
+    } finally {
+        document.getElementById("loader").style.display = "none";
+    }
+}
+</script>
+
+</body>
+</html>
